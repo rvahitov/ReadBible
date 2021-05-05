@@ -178,5 +178,39 @@ namespace Monads.Tests
             //assert
             newResult.Should().Be(new FailureResult<double, string>(f1));
         }
+
+        [Theory]
+        [AutoData]
+        public void When_SuccessResult_Fold_ShouldCall_OnSuccess( int successValue )
+        {
+            //arrange
+            var checkValue = 0;
+            var result     = new SuccessResult<int, string>(successValue);
+
+            void OnSuccess( int v ) => checkValue = v * 2;
+
+            void OnFailure( string _ ) => checkValue = successValue;
+            //act
+            result.Fold(OnSuccess, OnFailure);
+            //assert
+            checkValue.Should().Be(successValue * 2);
+        }
+
+        [Theory]
+        [AutoData]
+        public void When_FailureResult_Fold_ShouldCall_OnFailure(string successValue, string error )
+        {
+            //arrange
+            var checkValue = "";
+
+            var result = new FailureResult<string, string>(error);
+
+            void OnSuccess( string _ )       => checkValue = successValue;
+            void OnFailure( string failure ) => checkValue = failure;
+            //act
+            result.Fold(OnSuccess, OnFailure);
+            //assert
+            checkValue.Should().Be(error);
+        }
     }
 }

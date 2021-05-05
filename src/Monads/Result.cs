@@ -11,17 +11,29 @@ namespace Monads
     {
         T Fold<T>( Func<TSuccess, T> onSuccess, Func<TFailure, T> onFailure );
 
+        void Fold( Action<TSuccess> onSuccess, Action<TFailure> onFailure );
+
         bool IResult.IsSuccess() => Fold(_ => true, _ => false);
     }
 
     public sealed record SuccessResult<TSuccess, TFailure>( TSuccess Value ) : IResult<TSuccess, TFailure>
     {
         public T Fold<T>( Func<TSuccess, T> onSuccess, Func<TFailure, T> onFailure ) => onSuccess(Value);
+
+        public void Fold( Action<TSuccess> onSuccess, Action<TFailure> onFailure )
+        {
+            onSuccess(Value);
+        }
     }
 
     public sealed record FailureResult<TSuccess, TFailure>( TFailure Value ) : IResult<TSuccess, TFailure>
     {
         public T Fold<T>( Func<TSuccess, T> onSuccess, Func<TFailure, T> onFailure ) => onFailure(Value);
+
+        public void Fold( Action<TSuccess> onSuccess, Action<TFailure> onFailure )
+        {
+            onFailure(Value);
+        }
     }
 
     public static class Result
