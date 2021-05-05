@@ -1,5 +1,6 @@
 ﻿using Akkatecture.Aggregates;
 using ReadBible.Domain.Models.BookModel.Events;
+using ReadBible.Domain.Models.BookModel.ValueObjects;
 
 namespace ReadBible.Domain.Models.BookModel
 {
@@ -7,7 +8,7 @@ namespace ReadBible.Domain.Models.BookModel
         : AggregateState<BookAggregate, BookId>,
           IApply<BookCreated>
     {
-        public string? Title { get; private set; }
+        public BookTitle? Title { get; private set; }
 
         public void Apply( BookCreated aggregateEvent )
         {

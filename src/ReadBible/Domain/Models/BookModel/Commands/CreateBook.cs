@@ -1,14 +1,15 @@
 ﻿using Akkatecture.Commands;
+using ReadBible.Domain.Models.BookModel.ValueObjects;
 
 namespace ReadBible.Domain.Models.BookModel.Commands
 {
     public sealed class CreateBook : Command<BookAggregate, BookId>
     {
-        public CreateBook( string title ) : base(BookId.ForTitle(title))
+        public CreateBook( BookTitle title ) : base(BookId.ForTitle(title))
         {
             Title = title;
         }
 
-        public string Title { get; }
+        public BookTitle Title { get; }
     }
 }

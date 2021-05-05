@@ -8,6 +8,7 @@ using Monads;
 using ReadBible.Domain.Models.BookModel;
 using ReadBible.Domain.Models.BookModel.Commands;
 using ReadBible.Domain.Models.BookModel.Events;
+using ReadBible.Domain.Models.BookModel.ValueObjects;
 using ReadBible.Domain.Models.Common;
 using Xunit;
 
@@ -15,15 +16,17 @@ namespace ReadBible.Tests.Domain.Models.BookModel
 {
     public sealed class BookModelAggregateTests : PersistenceTestKit
     {
-        [Fact]
-        public async Task When_New_CreateBook_Should_Emit_BookCreated_Event()
+        [Theory]
+        [AutoData]
+        public async Task When_New_CreateBook_Should_Emit_BookCreated_Event(string bookTitle)
         {
             await WithJournalWrite(w => w.Pass(), () =>
             {
                 //arrange
                 var resultProbe = CreateTestProbe("result-probe");
                 var eventProbe  = CreateTestProbe("event-probe");
-                var command     = new CreateBook("Title 1");
+                var title       = new BookTitle(bookTitle);
+                var command     = new CreateBook(title);
                 var bookManager = ActorOf(Props.Create<BookAggregateManager>(),"book-manager");
                 Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent<BookAggregate, BookId, BookCreated>));
                 //act
@@ -34,7 +37,7 @@ namespace ReadBible.Tests.Domain.Models.BookModel
                            .IsSuccess().Should().BeTrue();
 
                 eventProbe.ExpectMsg<IDomainEvent<BookAggregate, BookId, BookCreated>>()
-                          .AggregateEvent.Title.Should().Be("Title 1");
+                          .AggregateEvent.Title.Should().Be(title);
             });
         }
 
@@ -47,7 +50,8 @@ namespace ReadBible.Tests.Domain.Models.BookModel
                 //arrange
                 var resultProbe = CreateTestProbe("result-probe");
                 var eventProbe  = CreateTestProbe("event-probe");
-                var command     = new CreateBook(bookTitle);
+                var title       = new BookTitle(bookTitle);
+                var command     = new CreateBook(title);
                 var bookManager = ActorOf(Props.Create<BookAggregateManager>(),"book-manager");
                 Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent<BookAggregate, BookId, BookCreated>));
                 //act

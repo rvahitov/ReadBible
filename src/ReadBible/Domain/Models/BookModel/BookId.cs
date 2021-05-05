@@ -1,5 +1,6 @@
 ﻿using System;
 using Akkatecture.Core;
+using ReadBible.Domain.Models.BookModel.ValueObjects;
 
 namespace ReadBible.Domain.Models.BookModel
 {
@@ -15,5 +16,7 @@ namespace ReadBible.Domain.Models.BookModel
         {
             return NewDeterministic(TitleNamespace, title);
         }
+
+        public static BookId ForTitle( BookTitle title ) => NewDeterministic(TitleNamespace, title.Value);
     }
 }
