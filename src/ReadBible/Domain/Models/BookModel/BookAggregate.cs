@@ -4,6 +4,7 @@ using ReadBible.Domain.Models.BookModel.Commands;
 using ReadBible.Domain.Models.BookModel.Events;
 using ReadBible.Domain.Models.BookModel.Queries;
 using ReadBible.Domain.Models.Common;
+using ReadBible.Domain.Models.VerseModel;
 
 namespace ReadBible.Domain.Models.BookModel
 {
@@ -13,6 +14,7 @@ namespace ReadBible.Domain.Models.BookModel
         {
             Command<CreateBook>(OnCreateBook);
             Command<GetBookByTitle>(OnGetByTitle);
+            Command<AddVerse>(OnAddVerse);
         }
 
         private void OnCreateBook( CreateBook command )
@@ -46,6 +48,30 @@ namespace ReadBible.Domain.Models.BookModel
                 var book = new Book(State.Title!) {ShortCuts = State.ShortCuts};
                 Sender.Tell(new SuccessResult<Book, string>(book), Self);
             }
+        }
+
+        private void OnAddVerse( AddVerse command )
+        {
+            if ( IsNew )
+            {
+                Sender.Tell(ExecutionResult.Failure($"Book {command.AggregateId} is not exists"), Self);
+                return;
+            }
+            
+            var verseId = VerseId.Create(Id, command.BookChapter, command.VerseNumber);
+            if ( State.VerseExists(verseId) )
+            {
+                Sender.Tell(ExecutionResult.Failure($"Book {Id} already have verse {verseId}"), Self);
+                return;
+            }
+            
+            Reply(ExecutionResult.Success());
+            var e       = new VerseAdded(verseId, command.BookChapter, command.VerseNumber);
+            var meta = new Metadata
+            {
+                {"VerseText", command.VerseText}
+            };
+            Emit(e, meta);
         }
     }
 }
