@@ -2,6 +2,7 @@
 using Monads;
 using ReadBible.Domain.Models.BookModel.Commands;
 using ReadBible.Domain.Models.BookModel.Events;
+using ReadBible.Domain.Models.BookModel.Queries;
 using ReadBible.Domain.Models.Common;
 
 namespace ReadBible.Domain.Models.BookModel
@@ -11,6 +12,7 @@ namespace ReadBible.Domain.Models.BookModel
         public BookAggregate( BookId id ) : base(id)
         {
             Command<CreateBook>(OnCreateBook);
+            Command<GetBookByTitle>(OnGetByTitle);
         }
 
         private void OnCreateBook( CreateBook command )
@@ -31,6 +33,19 @@ namespace ReadBible.Domain.Models.BookModel
                     }
                 },
                 error => { Sender.Tell(ExecutionResult.Failure(error), Self); });
+        }
+
+        private void OnGetByTitle( GetBookByTitle query )
+        {
+            if ( IsNew )
+            {
+                Sender.Tell(new FailureResult<Book, string>($"Book {query.Title} not found"), Self);
+            }
+            else
+            {
+                var book = new Book(State.Title!) {ShortCuts = State.ShortCuts};
+                Sender.Tell(new SuccessResult<Book, string>(book), Self);
+            }
         }
     }
 }
