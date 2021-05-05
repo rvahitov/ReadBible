@@ -16,12 +16,19 @@ namespace ReadBible.Domain.Models.BookModel
         private void OnCreateBook( CreateBook command )
         {
             var x = from _ in IsNew.Validate(isNew => isNew, $"Book {Id} already exists")
-                    let e = new BookCreated(command.Title)
-                    select e;
+                    let created = new BookCreated(command.Title)
+                    select created;
             x.Fold(e =>
                 {
                     Reply(ExecutionResult.Success());
-                    Emit(e);
+                    if ( command.ShortCuts.IsEmpty )
+                    {
+                        Emit(e);
+                    }
+                    else
+                    {
+                        EmitAll(e, new BookShortCutsChanged(command.ShortCuts));
+                    }
                 },
                 error => { Sender.Tell(ExecutionResult.Failure(error), Self); });
         }

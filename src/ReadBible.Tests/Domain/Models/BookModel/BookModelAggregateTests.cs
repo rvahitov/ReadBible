@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Immutable;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Persistence.TestKit;
 using Akkatecture.Aggregates;
@@ -28,7 +29,7 @@ namespace ReadBible.Tests.Domain.Models.BookModel
                 var title       = new BookTitle(bookTitle);
                 var command     = new CreateBook(title);
                 var bookManager = ActorOf(Props.Create<BookAggregateManager>(),"book-manager");
-                Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent<BookAggregate, BookId, BookCreated>));
+                Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent));
                 //act
                 bookManager.Tell(command, resultProbe);
 
@@ -38,6 +39,31 @@ namespace ReadBible.Tests.Domain.Models.BookModel
 
                 eventProbe.ExpectMsg<IDomainEvent<BookAggregate, BookId, BookCreated>>()
                           .AggregateEvent.Title.Should().Be(title);
+            });
+        }
+
+        [Theory]
+        [AutoData]
+        public async Task When_New_CreateBook_Should_Emit_BookShortCutsChanged_Event(BookTitle bookTitle, BookShortCut[] shortCuts)
+        {
+            await WithJournalWrite(w => w.Pass(), () =>
+            {
+                //arrange
+                var resultProbe   = CreateTestProbe("result-probe");
+                var eventProbe    = CreateTestProbe("event-probe");
+                var bookShortCuts = shortCuts.ToImmutableHashSet();
+                var command       = new CreateBook(bookTitle) {ShortCuts = bookShortCuts};
+                var bookManager   = ActorOf(Props.Create<BookAggregateManager>(),"book-manager");
+                Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent<BookAggregate,BookId,BookShortCutsChanged>));
+                //act
+                bookManager.Tell(command, resultProbe);
+
+                //assert
+                resultProbe.ExpectMsg<IResult<Nothing, string>>()
+                           .IsSuccess().Should().BeTrue();
+
+                eventProbe.ExpectMsg<IDomainEvent<BookAggregate, BookId, BookShortCutsChanged>>()
+                          .AggregateEvent.ShortCuts.Should().BeSubsetOf(bookShortCuts);
             });
         }
 
@@ -53,7 +79,7 @@ namespace ReadBible.Tests.Domain.Models.BookModel
                 var title       = new BookTitle(bookTitle);
                 var command     = new CreateBook(title);
                 var bookManager = ActorOf(Props.Create<BookAggregateManager>(),"book-manager");
-                Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent<BookAggregate, BookId, BookCreated>));
+                Sys.EventStream.Subscribe(eventProbe, typeof(IDomainEvent));
                 //act
                 bookManager.Tell(command);
                 eventProbe.ExpectMsg<IDomainEvent<BookAggregate, BookId, BookCreated>>();

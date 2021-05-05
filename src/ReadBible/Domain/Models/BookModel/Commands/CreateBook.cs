@@ -1,4 +1,5 @@
-﻿using Akkatecture.Commands;
+﻿using System.Collections.Immutable;
+using Akkatecture.Commands;
 using ReadBible.Domain.Models.BookModel.ValueObjects;
 
 namespace ReadBible.Domain.Models.BookModel.Commands
@@ -11,5 +12,8 @@ namespace ReadBible.Domain.Models.BookModel.Commands
         }
 
         public BookTitle Title { get; }
+
+        public ImmutableHashSet<BookShortCut> ShortCuts { get; init; } =
+            ImmutableHashSet<BookShortCut>.Empty;
     }
 }
