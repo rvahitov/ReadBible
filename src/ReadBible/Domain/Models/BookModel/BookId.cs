@@ -12,11 +12,6 @@ namespace ReadBible.Domain.Models.BookModel
         {
         }
 
-        public static BookId ForTitle( string title )
-        {
-            return NewDeterministic(TitleNamespace, title);
-        }
-
         public static BookId ForTitle( BookTitle title ) => NewDeterministic(TitleNamespace, title.Value);
     }
 }
